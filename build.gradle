@@ -1,0 +1,107 @@
+/*
+  File    : build.gradle
+  Purpose : Build file for opal-tools
+ */
+
+plugins {
+    id "java"
+    id "eclipse"
+    id "distribution"
+}
+// for Ant filter to replace variables in files
+
+//-----------------------------------------------------------------------------
+//-- Configuration
+//-----------------------------------------------------------------------------
+
+project.description       = "sqlcldemo"
+project.version           = '0.0.1'
+
+sourceCompatibility       = 21
+targetCompatibility       = 21
+
+archivesBaseName          = "sqlcldemo"
+
+// version of sqlcl to be used
+// download files from : https://www.oracle.com/tools/downloads/sqlcl-downloads.html
+// and register here
+def sqlclVersion  ='24.1.0'
+
+//-----------------------------------------------------------------------------
+//-- Repositories and dependencies
+//-----------------------------------------------------------------------------
+
+/* define repositories to look for maven modules */
+repositories {
+    maven {url "https://plugins.gradle.org/m2/"}
+    mavenCentral()
+    flatDir {dirs "/opt/oracle/sqlcl/lib/"}
+    flatDir {dirs "/opt/oracle/sqlcl/lib/ext"}
+}
+
+/* define specific maven dependencies */
+dependencies {
+    // *** Only for compilation, NOT distributed
+    //compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+
+    // https://mvnrepository.com/artifact/log4j/log4j
+    //compile group: 'log4j', name: 'log4j', version: '1.2.+'
+     // https://mvnrepository.com/artifact/commons-logging/commons-logging
+    //implementation group: 'commons-logging', name: 'commons-logging', version: '1.2'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-text
+   // dependencies from sqlcl
+    implementation fileTree(dir: "/opt/oracle/sqlcl/lib", include: ['*.jar'])
+    implementation fileTree(dir: "/opt/oracle/sqlcl/lib/ext", include: ['*.jar'])
+}
+
+//-----------------------------------------------------------------------------
+//-- Groovy helper functions
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//-- task definitions
+//-----------------------------------------------------------------------------
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                //'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'io.kenbugs.sqlcldemo.DemoCmd'
+        )
+    }
+}
+//-----------------------------------------------------------------------------
+//-- task definitions for developers
+//-- setting up the developer environment and downloading new JRI libraries
+//-- for a new sqlcl release
+//-----------------------------------------------------------------------------
+
+tasks.register('installLib') {
+    description = "This will register the sqlcl libraries for version $sqlclVersion into the lib directory. Needs to be done only once when you upgrade to a new sqlcl version."
+    group = 'install'
+    // ${Fßile.separator}
+    doLast{
+        def tempLocation    ="$project.projectDir/build/libs/sqlcldemo-" + project.version + ".jar"
+        def targetLocation  ="/opt/oracle/sqlcl/lib/ext/"
+
+        println " register files from ${tempLocation} install in target location: $targetLocation"
+
+        // copy all libraries to target location to: lib/sqlcl/<version>
+        copy {
+            from "$tempLocation"
+            into "$targetLocation"
+            include "**"
+            // exclude all that are used for compilation and test only
+            // but not required at runtime
+        }
+    }
+}
+
+println "\n***********************************************"
+println "Version: " + project.version
+println "Source-Compatibility: " + project.sourceCompatibility
+println "Project description: " + project.property("description")
+println "sqlcl version: " + sqlclVersion
+println "sqlcl libs from: " + "lib/sqlcl-$sqlclVersion"
+println "***********************************************\n\n"

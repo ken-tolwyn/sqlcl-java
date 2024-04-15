@@ -1,0 +1,12 @@
+FROM  container-registry.oracle.com/java/openjdk:21-oraclelinux8
+CMD ["/bin/bash"]
+ARG USER_HOME_DIR=/root
+ENV ORACLE_BASE=/opt/oracle SQLCL_ZIP=sqlcl.zip
+ENV GRADLE_VERSION=8.6
+ENV GRADLE_BASE=/opt/gradle
+ADD https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip /tmp/sqlcl.zip
+RUN USER_HOME_DIR=/root mkdir -p $ORACLE_BASE && cd $ORACLE_BASE && jar -xf /tmp/$SQLCL_ZIP && chmod +x $ORACLE_BASE/sqlcl/bin/sql && echo "export PATH=/opt/oracle/sqlcl/bin:\$PATH" > /etc/profile.d/sqlcl.sh && rm /tmp/$SQLCL_ZIP
+ADD https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-all.zip /tmp/gradle.zip
+RUN USER_HOME_DIR=/root mkdir -p $GRADLE_BASE && cd $GRADLE_BASE && jar -xf /tmp/gradle.zip && chmod +x $GRADLE_BASE/gradle-$GRADLE_VERSION/bin/gradle && rm /tmp/gradle.zip && echo "export PATH=$GRADLE_BASE/gradle-$GRADLE_VERSION/bin:\$PATH" > /etc/profile.d/gradle.sh
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/oracle/sqlcl/bin:/opt/gradle/gradle-$GRADLE_VERSION/bin
+WORKDIR /opt/oracle/sql_scripts

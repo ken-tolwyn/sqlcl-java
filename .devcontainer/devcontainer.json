@@ -1,0 +1,15 @@
+// Info https://containers.dev/implementors/json_reference/
+{
+  //	name of the dev container
+  "name": "sqlcl-demo",
+  //	Or use a Dockerfile here, more info: https://containers.dev/guide/dockerfile
+  "dockerFile": "Containerfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "asf.apache-netbeans-java"
+      ]
+    }
+  }
+
+}
